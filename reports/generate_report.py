@@ -8,7 +8,7 @@ Run:
     python reports/generate_report.py
 
 Produces a professional 2-page executive report styled like an internal
-bank risk report, ready for LinkedIn Featured upload.
+bank risk report summarising key findings and methodology.
 """
 
 import sys
@@ -402,8 +402,9 @@ def build_page1(story, styles, kpis, grade_df, purpose_df, income_df, loan_bkt_d
         "<b>Adverse selection at high interest rates:</b> Loans with rates above 24% carry "
         "default rates nearly 4x those of sub-8% loans, suggesting the pricing model may be "
         "attracting higher-risk borrowers at the margin rather than compensating for risk.",
-        "<b>Portfolio default rate of {:.1f}% is above the 15% target threshold</b>, "
-        "driven primarily by Grade D–G originations and small business loans.".format(default_rate),
+        "<b>Portfolio default rate of {:.1f}% is elevated</b>, driven primarily by "
+        "Grade D–G originations and small business loans, indicating concentration "
+        "risk in lower-credit-quality segments.".format(default_rate),
     ]
     for f in findings:
         story.append(Paragraph(f"&#8226;  {f}", styles["bullet"]))
@@ -415,14 +416,15 @@ def build_page1(story, styles, kpis, grade_df, purpose_df, income_df, loan_bkt_d
     story.append(Spacer(1, 4))
 
     actions = [
-        "<b>Tighten underwriting for small business loans &gt;$20k:</b> Implement enhanced "
-        "income documentation and business revenue verification for this high-default segment.",
-        "<b>Introduce hard income floor for sub-$40k borrowers:</b> Require debt-to-income "
-        "analysis and alternative income sources to qualify, reducing default exposure by an "
-        "estimated 8–12% in that bracket.",
-        "<b>Review interest rate pricing model for 20%+ rate bands:</b> Conduct adverse "
-        "selection analysis to determine whether rate increases are attracting marginal "
-        "borrowers and adjust risk-based pricing accordingly.",
+        "<b>Small business origination limits:</b> Given a default rate exceeding 26%, "
+        "additional income and revenue documentation requirements for small business loans "
+        "above $20k would reduce concentration risk in this segment.",
+        "<b>Income-based risk tiering:</b> The data shows a consistent step-down in default "
+        "rates as income rises. Formalising income brackets into the pricing and approval "
+        "workflow would improve risk-adjusted returns across the portfolio.",
+        "<b>Interest rate band review:</b> The steep increase in default rates above 24% "
+        "suggests the current pricing structure may not adequately offset the risk being "
+        "taken on at the high-rate end of the book.",
     ]
     for a in actions:
         story.append(Paragraph(f"&#8226;  {a}", styles["bullet"]))
