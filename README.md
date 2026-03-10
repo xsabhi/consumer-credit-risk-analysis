@@ -1,6 +1,6 @@
 # Consumer Credit Portfolio Risk Analysis
 
-An end-to-end credit risk analytics project demonstrating SQL segmentation, Python analysis, and an interactive Streamlit dashboard — targeting analyst roles at Capital One, Goldman Sachs, Citi, and Self Financial.
+An end-to-end credit risk analytics project analysing consumer loan performance across credit grades, borrower segments, and origination vintages using SQL, Python, and an interactive Streamlit dashboard.
 
 **Author:** Abhishek Dharwadkar
 **Dataset:** Lending Club Public Loan Data (Kaggle) · 250k+ consumer loans · 2014–2020
@@ -8,15 +8,9 @@ An end-to-end credit risk analytics project demonstrating SQL segmentation, Pyth
 
 ---
 
-## What This Project Demonstrates
+## Overview
 
-| Skill | Implementation |
-|---|---|
-| SQL for data analysis | 4 query files with CTEs, window functions, GROUP BY segmentation |
-| Python data analysis | Pandas feature engineering, multi-factor default model |
-| Dashboard / visualisation | Streamlit + Plotly interactive dashboard with filters |
-| Credit risk domain knowledge | Default rate segmentation, vintage analysis, underwriting insights |
-| Communication of insights | 2-page executive PDF report |
+This project explores the question: *which loans are most likely to default, and why?* Using the Lending Club public dataset, it segments a portfolio of 250,000+ consumer loans by credit grade, loan purpose, borrower income, employment history, and origination vintage to surface default risk patterns and underwriting insights.
 
 ---
 
@@ -25,20 +19,20 @@ An end-to-end credit risk analytics project demonstrating SQL segmentation, Pyth
 ```
 consumer-credit-risk-analysis/
 ├── dashboard/
-│   └── app.py                  ← Streamlit dashboard (main deliverable)
+│   └── app.py                  ← Streamlit dashboard
 ├── src/
 │   ├── config.py               ← Paths, thresholds, bin definitions
 │   ├── data_generator.py       ← Synthetic Lending Club data (250k rows)
 │   ├── data_loader.py          ← CSV → feature engineering → SQLite
 │   ├── database.py             ← SQLite connection helpers
-│   └── analysis.py             ← All analysis queries used by dashboard
+│   └── analysis.py             ← Core analysis functions
 ├── sql/
 │   ├── 01_portfolio_overview.sql
 │   ├── 02_risk_by_loan_characteristics.sql
 │   ├── 03_risk_by_borrower_characteristics.sql
 │   └── 04_time_based_analysis.sql
 ├── reports/
-│   ├── generate_report.py      ← PDF report generator (ReportLab)
+│   ├── generate_report.py      ← PDF report generator
 │   └── output/                 ← Generated PDF lands here
 ├── scripts/
 │   └── setup.py                ← One-time database setup
@@ -55,8 +49,11 @@ consumer-credit-risk-analysis/
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/yourusername/consumer-credit-risk-analysis.git
+git clone https://github.com/xsabhi/consumer-credit-risk-analysis.git
 cd consumer-credit-risk-analysis
+
+python3 -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -66,7 +63,7 @@ pip install -r requirements.txt
 python scripts/setup.py
 ```
 
-This builds a SQLite database using **synthetic data** (250,000 realistic consumer loans) so you can run the dashboard immediately without downloading anything.
+This builds a SQLite database using **synthetic data** (250,000 realistic consumer loans) so the dashboard runs immediately without downloading anything.
 
 > **To use the real Lending Club dataset:**
 > 1. Download from Kaggle: [Lending Club Loan Data](https://www.kaggle.com/datasets/wordsforthewise/lending-club)
@@ -91,71 +88,53 @@ Output: `reports/output/Consumer_Credit_Risk_Analysis_Abhishek_Dharwadkar.pdf`
 
 ---
 
-## Dashboard Features
+## Dashboard
 
-The dashboard has **5 tabs**:
+The dashboard has **5 tabs**, with sidebar filters for credit grade, origination year, and loan purpose that update all charts in real time.
 
 | Tab | Contents |
 |---|---|
-| Portfolio Overview | KPI tiles, loan volume by grade, status donut, origination by purpose |
+| Portfolio Overview | KPI tiles, loan volume by grade, status breakdown, origination by purpose |
 | Default Analysis | Default rates by loan amount, interest rate, income, employment length, purpose |
 | Risk Heatmaps | Grade × Purpose heatmap, Income × Loan Amount heatmap, US state choropleth |
 | Vintage Trends | Monthly originations, default rate trend, vintage cohort analysis |
-| SQL Explorer | Live SQL console against the credit database with preset queries |
-
-**Sidebar filters:** Credit grade, origination year range, loan purpose — all charts update in real-time.
+| SQL Explorer | Live SQL console with preset queries |
 
 ---
 
-## SQL Highlights
+## SQL
 
-Four query files covering the key analytical questions hiring managers care about:
+Four query files covering portfolio overview, loan risk, borrower risk, and time-based analysis. Key techniques used:
 
-- **Portfolio overview**: KPIs, grade composition, status breakdown, state-level volume
-- **Loan risk**: Default rates by purpose, loan amount bucket, interest rate band — including CTE to identify grade × purpose segments with >25% default rates
-- **Borrower risk**: Default rates by income, employment length, home ownership, delinquency history — with window function `RANK()` to identify highest-risk borrower segment per grade
-- **Time trends**: Monthly originations, 3-month rolling default rate, vintage cohort analysis with `LAG()` for year-over-year change
-
----
-
-## Key Findings (Synthetic Data)
-
-- **Grade is the strongest predictor:** Default rates range from ~6% (Grade A) to ~40% (Grade G)
-- **Small business loans are highest risk:** ~26% default rate vs ~10% for home improvement loans
-- **Income strongly predicts default:** <$40k income borrowers default at ~22% vs ~12% for >$100k
-- **Interest rate adverse selection:** Loans >24% carry default rates ~4x those of sub-8% loans
-- **Portfolio default rate of ~17%** exceeds the 15% target, driven by Grade D–G and small business
+- `GROUP BY` segmentation with aggregate functions (`COUNT`, `SUM`, `AVG`)
+- `CASE` statements for custom ordering of bucketed categories
+- CTEs to identify high-risk grade × purpose segments above a 25% default threshold
+- Window functions — `RANK() OVER (PARTITION BY ...)` for within-grade risk ranking, `LAG()` for year-over-year default rate change, and a 3-month rolling average with `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW`
 
 ---
 
-## Deploy to Streamlit Community Cloud (Free)
+## Key Findings
+
+- **Grade is the strongest predictor of default:** rates range from ~6% (Grade A) to ~40% (Grade G)
+- **Small business loans carry the highest default rate by purpose** (~26%), roughly 2.5x that of home improvement loans (~10%)
+- **Income is inversely correlated with default:** borrowers earning under $40k default at ~22% vs ~12% for those earning over $100k
+- **Adverse selection at high interest rates:** loans priced above 24% default at ~4x the rate of sub-8% loans
+- **Portfolio default rate of ~17%** is driven primarily by Grade D–G originations and small business loans
+
+---
+
+## Deploy to Streamlit Community Cloud
 
 1. Push this repo to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Set main file path: `dashboard/app.py`
-5. Click Deploy — done
+3. Connect your GitHub repo, set main file path to `dashboard/app.py`
+4. Click Deploy
 
 The app auto-generates the database on first launch using synthetic data.
-
----
-
-## LinkedIn Featured Section
-
-Upload these three items:
-
-1. **PDF Report** — `Consumer_Credit_Risk_Analysis_Abhishek_Dharwadkar.pdf`
-   *"Analysed 250,000+ consumer loans using SQL and Python to identify default patterns and high-risk customer segments for credit risk management"*
-
-2. **Dashboard screenshot** — take a screenshot of the running Streamlit dashboard
-   *"Interactive Streamlit dashboard tracking consumer credit portfolio performance and risk trends by loan and borrower characteristics"*
-
-3. **This GitHub repository**
-   *"SQL and Python code for end-to-end consumer credit risk analysis — portfolio segmentation, default rate modelling, and interactive visualisation"*
 
 ---
 
 ## Contact
 
 **Abhishek Dharwadkar**
-[LinkedIn](https://linkedin.com/in/yourprofile) · [GitHub](https://github.com/yourusername)
+[LinkedIn](https://linkedin.com/in/abhishekvdharwadkar) · [GitHub](https://github.com/xsabhi)
